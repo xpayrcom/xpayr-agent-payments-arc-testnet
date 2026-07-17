@@ -16,6 +16,10 @@ inputs:
   evidence-path:
     description: Absolute path for the secret-free JSON evidence artifact.
     required: true
+  payment-url:
+    description: Optional existing XPayr Testnet payment URL. When omitted, the action creates its own session.
+    required: false
+    default: ""
 
 outputs:
   evidence-path:
@@ -36,4 +40,5 @@ runs:
         XPAYR_ARC_AGENT_TEST_PRIVATE_KEY: ${{ inputs.arc-agent-test-private-key }}
         XPAYR_E2E_ACK: ARC_TESTNET_ONLY
         XPAYR_E2E_OUTPUT: ${{ inputs.evidence-path }}
+        XPAYR_EXISTING_PAYMENT_URL: ${{ inputs.payment-url }}
       run: node "$GITHUB_ACTION_PATH/scripts/run-payment-e2e.mjs"

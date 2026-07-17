@@ -51,9 +51,10 @@ The repository also exposes the same guardrailed lifecycle as a composite GitHub
     xpayr-test-secret-key: ${{ secrets.XPAYR_TEST_SECRET_KEY }}
     arc-agent-test-private-key: ${{ secrets.XPAYR_ARC_AGENT_TEST_PRIVATE_KEY }}
     evidence-path: ${{ runner.temp }}/xpayr-arc-testnet-payment.json
+    payment-url: ${{ steps.create-session.outputs.payment_url }} # optional
 ```
 
-The action fixes the network acknowledgement to `ARC_TESTNET_ONLY`, rejects keys that are not test credentials, enforces the `0.001000 USDC` ceiling, verifies the `PaymentSplit` event and balance deltas, and requires both backend and public payment status to become `completed`.
+The action fixes the network acknowledgement to `ARC_TESTNET_ONLY`, rejects keys that are not test credentials, enforces the `0.001000 USDC` ceiling, verifies the `PaymentSplit` event and balance deltas, and requires both backend and public payment status to become `completed`. Pass an existing Testnet `payment-url` to complete the exact session created by another API or collection smoke; otherwise the action creates a bounded session itself.
 
 The committed [`arc-testnet-agent-payment.json`](evidence/arc-testnet-agent-payment.json) fixture references a real completed `0.01 USDC` payment. The read-only verifier re-fetches its receipt and XPayr status, then checks payer, splitter, token, amount, platform fee, merchant amount, and recipient addresses against the `PaymentSplit` event.
 

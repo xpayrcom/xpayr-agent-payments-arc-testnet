@@ -19,12 +19,20 @@ const API_BASE_URL = String(process.env.XPAYR_BASE_URL || "https://xpayr.com/api
 const API_KEY = String(process.env.XPAYR_TEST_SECRET_KEY || "");
 const WALLET_KEY = String(process.env.XPAYR_ARC_AGENT_TEST_PRIVATE_KEY || "");
 const OUTPUT_PATH = String(process.env.XPAYR_E2E_OUTPUT || "artifacts/arc-testnet-e2e.json");
+const EXISTING_PAYMENT_URL = String(process.env.XPAYR_EXISTING_PAYMENT_URL || "");
 const RPC_READ_DELAY_MS = 350;
 
 assert.equal(process.env.XPAYR_E2E_ACK, "ARC_TESTNET_ONLY", "XPAYR_E2E_ACK must explicitly select Arc Testnet");
 assert.match(API_BASE_URL, /^https:\/\//);
 assert.match(API_KEY, /^sk_test_[A-Za-z0-9_-]{32,}$/);
 assert.match(WALLET_KEY, /^0x[a-fA-F0-9]{64}$/);
+if (EXISTING_PAYMENT_URL) {
+  assert.match(
+    EXISTING_PAYMENT_URL,
+    /^https:\/\/xpayr\.com\/(?:pay|test|test-pay)\/ps_[a-z0-9]+$/,
+    "Existing payment URL must be an XPayr Testnet session",
+  );
+}
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -103,19 +111,24 @@ async function prepareAndBroadcast(label, operation) {
   throw new Error(`${label} exhausted its retry budget`);
 }
 
-const session = await api("POST", "/payments", {
-  amount: "0.001000",
-  currency: "USDC",
-  network: "arc-testnet",
-  order_id: `AGENT-CI-${Date.now()}`,
-  description: "Bounded agent-wallet Arc Testnet E2E",
-  metadata: { source: "github-actions", purpose: "agent-payment-e2e" },
-});
-assert.match(session.id || "", /^ps_[a-z0-9]+$/);
-assert.equal(session.status, "pending");
-assert.equal(session.livemode, false);
+let session = null;
+let paymentUrl = EXISTING_PAYMENT_URL;
+if (!paymentUrl) {
+  session = await api("POST", "/payments", {
+    amount: "0.001000",
+    currency: "USDC",
+    network: "arc-testnet",
+    order_id: `AGENT-CI-${Date.now()}`,
+    description: "Bounded agent-wallet Arc Testnet E2E",
+    metadata: { source: "github-actions", purpose: "agent-payment-e2e" },
+  });
+  assert.match(session.id || "", /^ps_[a-z0-9]+$/);
+  assert.equal(session.status, "pending");
+  assert.equal(session.livemode, false);
+  paymentUrl = session.payment_url;
+}
 
-const checkoutResponse = await fetch(session.payment_url, {
+const checkoutResponse = await fetch(paymentUrl, {
   headers: { "User-Agent": "XPayr-Agent-Arc-Testnet-E2E/1.0" },
   signal: AbortSignal.timeout(25_000),
 });
@@ -123,6 +136,17 @@ assert.equal(checkoutResponse.status, 200);
 const config = extractAppConfig(await checkoutResponse.text());
 assert.equal(config.network, "arc-testnet");
 assert.equal(Number(config.networks?.["arc-testnet"]?.chain_id_int), CHAIN_ID);
+assert.match(config.sessionId || "", /^ps_[a-z0-9]+$/);
+if (session) {
+  assert.equal(config.sessionId, session.id);
+} else {
+  session = {
+    id: config.sessionId,
+    payment_url: paymentUrl,
+    status: "pending",
+    livemode: false,
+  };
+}
 
 const currency = config.paymentCurrencies?.["arc-testnet"]?.USDC;
 const authorization = config.marketplaceSplit?.authorization;
