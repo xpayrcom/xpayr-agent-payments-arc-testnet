@@ -39,6 +39,12 @@ Use an XPayr test key before live credentials. Never expose `sk_test_*`, `sk_liv
 
 This repository supports **Arc Testnet** only. It does not claim Arc Mainnet production availability or endorsement by Circle. Arc is a trademark of Circle Internet Group, Inc. and/or its affiliates.
 
+## Real transaction workflow
+
+`Agent wallet Arc Testnet E2E` is a bounded GitHub Actions workflow backed by a dedicated low-balance Testnet wallet and restricted XPayr test key. It creates a session, consumes the signed splitter authorization on Arc Testnet, submits the receipt to XPayr, verifies the completed public status, and uploads a secret-free evidence artifact. The hard-coded payment ceiling is `0.001000 USDC`, which keeps the transaction small while still exercising non-zero fee splitting; Mainnet and automatic wallet funding are not supported.
+
+The committed [`arc-testnet-agent-payment.json`](evidence/arc-testnet-agent-payment.json) fixture references a real completed `0.01 USDC` payment. The read-only verifier re-fetches its receipt and XPayr status, then checks payer, splitter, token, amount, platform fee, merchant amount, and recipient addresses against the `PaymentSplit` event.
+
 ## Documentation
 
 - [Developer Hub](https://xpayr.com/developers)

@@ -1,0 +1,38 @@
+name: Agent wallet Arc Testnet E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xpayr-agent-arc-testnet-e2e
+  cancel-in-progress: false
+
+jobs:
+  payment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: arc-testnet-e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run smoke:testnet
+        env:
+          XPAYR_TEST_SECRET_KEY: ${{ secrets.XPAYR_TEST_SECRET_KEY }}
+          XPAYR_ARC_AGENT_TEST_PRIVATE_KEY: ${{ secrets.XPAYR_ARC_AGENT_TEST_PRIVATE_KEY }}
+          XPAYR_E2E_ACK: ARC_TESTNET_ONLY
+          XPAYR_E2E_OUTPUT: ${{ runner.temp }}/arc-testnet-agent-payment.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arc-testnet-agent-payment-evidence
+          path: ${{ runner.temp }}/arc-testnet-agent-payment.json
+          retention-days: 30

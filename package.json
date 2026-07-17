@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test tests/*.test.mjs", "example": "node examples/evaluate-and-submit.mjs" },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "example": "node examples/evaluate-and-submit.mjs",
+    "smoke:testnet": "node scripts/run-payment-e2e.mjs",
+    "verify:known-payment": "node scripts/verify-known-payment.mjs"
+  },
+  "dependencies": { "ethers": "^6.15.0" },
   "engines": { "node": ">=18" }
 }
