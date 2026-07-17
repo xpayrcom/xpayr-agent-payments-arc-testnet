@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "frozen": false,
+  "allowed_networks": ["arc-testnet"],
+  "allowed_tokens": ["USDC"],
+  "recipient_allowlist": ["0x1111111111111111111111111111111111111111"],
+  "max_transaction": "100.000000",
+  "daily_limit": "500.000000",
+  "human_approval_above": "50.000000",
+  "max_retries": 1
+}

@@ -1,0 +1,8 @@
+{
+  "name": "xpayr-agent-payments-arc-testnet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test tests/*.test.mjs", "example": "node examples/evaluate-and-submit.mjs" },
+  "engines": { "node": ">=18" }
+}
