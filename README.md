@@ -43,6 +43,18 @@ This repository supports **Arc Testnet** only. It does not claim Arc Mainnet pro
 
 `Agent wallet Arc Testnet E2E` is a bounded GitHub Actions workflow backed by a dedicated low-balance Testnet wallet and restricted XPayr test key. It creates a session, consumes the signed splitter authorization on Arc Testnet, submits the receipt to XPayr, verifies the completed public status, and uploads a secret-free evidence artifact. The hard-coded payment ceiling is `0.001000 USDC`, which keeps the transaction small while still exercising non-zero fee splitting; Mainnet and automatic wallet funding are not supported.
 
+The repository also exposes the same guardrailed lifecycle as a composite GitHub Action. Pin callers to a full commit SHA instead of a moving branch:
+
+```yaml
+- uses: xpayrcom/xpayr-agent-payments-arc-testnet@FULL_COMMIT_SHA
+  with:
+    xpayr-test-secret-key: ${{ secrets.XPAYR_TEST_SECRET_KEY }}
+    arc-agent-test-private-key: ${{ secrets.XPAYR_ARC_AGENT_TEST_PRIVATE_KEY }}
+    evidence-path: ${{ runner.temp }}/xpayr-arc-testnet-payment.json
+```
+
+The action fixes the network acknowledgement to `ARC_TESTNET_ONLY`, rejects keys that are not test credentials, enforces the `0.001000 USDC` ceiling, verifies the `PaymentSplit` event and balance deltas, and requires both backend and public payment status to become `completed`.
+
 The committed [`arc-testnet-agent-payment.json`](evidence/arc-testnet-agent-payment.json) fixture references a real completed `0.01 USDC` payment. The read-only verifier re-fetches its receipt and XPayr status, then checks payer, splitter, token, amount, platform fee, merchant amount, and recipient addresses against the `PaymentSplit` event.
 
 ## Documentation

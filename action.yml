@@ -1,0 +1,39 @@
+name: XPayr Arc Testnet payment lifecycle
+description: Run a bounded Arc Testnet USDC payment through XPayr and verify reconciliation.
+author: XPayr
+
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  xpayr-test-secret-key:
+    description: Restricted sk_test key with payments:create and payments:read scopes.
+    required: true
+  arc-agent-test-private-key:
+    description: Dedicated low-balance Arc Testnet wallet key. Never use a production wallet.
+    required: true
+  evidence-path:
+    description: Absolute path for the secret-free JSON evidence artifact.
+    required: true
+
+outputs:
+  evidence-path:
+    description: Path containing the verified lifecycle evidence.
+    value: ${{ inputs.evidence-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install pinned dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --ignore-scripts
+    - name: Execute bounded Arc Testnet lifecycle
+      shell: bash
+      env:
+        XPAYR_TEST_SECRET_KEY: ${{ inputs.xpayr-test-secret-key }}
+        XPAYR_ARC_AGENT_TEST_PRIVATE_KEY: ${{ inputs.arc-agent-test-private-key }}
+        XPAYR_E2E_ACK: ARC_TESTNET_ONLY
+        XPAYR_E2E_OUTPUT: ${{ inputs.evidence-path }}
+      run: node "$GITHUB_ACTION_PATH/scripts/run-payment-e2e.mjs"
